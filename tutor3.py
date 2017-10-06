@@ -263,11 +263,13 @@ class Caseman():
         self.validation_fraction = vfrac
         self.test_fraction = tfrac
         self.training_fraction = 1 - (vfrac + tfrac)
-        self.generate_cases()
-        self.organize_cases()
+        if(cfunc != None):
+            self.generate_cases()
+            self.organize_cases()
 
     def generate_cases(self):
         self.cases = self.casefunc()  # Run the case generator.  Case = [input-vector, target-vector]
+        print(self.cases)
 
     def organize_cases(self):
         ca = np.array(self.cases)
@@ -277,6 +279,16 @@ class Caseman():
         self.training_cases = ca[0:separator1]
         self.validation_cases = ca[separator1:separator2]
         self.testing_cases = ca[separator2:]
+
+    def add_cases_from_file(self, filestring):
+        with open(filestring) as f:
+            input_string = f.readlines()
+
+        self.cases = []
+        for line in input_string:
+            line = line.strip()
+            self.cases.append([line.split(";")[0:-1], line.split(";")[-1:]])
+
 
     def get_training_cases(self): return self.training_cases
     def get_validation_cases(self): return self.validation_cases
@@ -300,7 +312,7 @@ def autoex(epochs=300,nbits=4,lrate=0.03,showint=100,mbs=None,vfrac=0.1,tfrac=0.
     ann.runmore(epochs*2,bestk=bestk)
     return ann
 
-def countex(epochs=5000,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0.1,tfrac=0.1,vint=200,sm=True,bestk=1):
+def countex(epochs=300,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0.1,tfrac=0.1,vint=200,sm=True,bestk=1):
     case_generator = (lambda: TFT.gen_vector_count_cases(ncases,nbits))
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac)
     ann = Gann(dims=[nbits, nbits*3, nbits+1], cman=cman, lrate=lrate, showint=showint, mbs=mbs, vint=vint, softmax=sm)
@@ -308,3 +320,7 @@ def countex(epochs=5000,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0
     return ann
 
 
+caseman = Caseman(None)
+caseman.add_cases_from_file("winequality_red.txt")
+print(caseman.cases)
+#countex()
