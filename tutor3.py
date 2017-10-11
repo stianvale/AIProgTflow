@@ -230,7 +230,7 @@ class Gannmodule():
                                    name=mona+'-wgt',trainable=True) # True = default for trainable anyway
         self.biases = tf.Variable(np.random.uniform(-.1, .1, size=n),
                                   name=mona+'-bias', trainable=True)  # First bias vector
-        self.output = tf.nn.relu(tf.matmul(self.input,self.weights)+self.biases,name=mona+'-out')
+        self.output = tf.tanh(tf.matmul(self.input,self.weights)+self.biases,name=mona+'-out')
         self.ann.add_module(self)
 
     def getvar(self,type):  # type = (in,out,wgt,bias)
@@ -280,14 +280,30 @@ class Caseman():
         self.validation_cases = ca[separator1:separator2]
         self.testing_cases = ca[separator2:]
 
-    def add_cases_from_file(self, filestring):
+    def add_cases_from_file(self, filestring, sep):
+        unique=[]
         with open(filestring) as f:
             input_string = f.readlines()
 
         self.cases = []
+
         for line in input_string:
             line = line.strip()
-            self.cases.append([line.split(";")[0:-1], line.split(";")[-1:]])
+            output = int(line.split(sep)[-1:][0])
+            if (output not in unique):
+                unique.append(output)
+
+        unique.sort()
+
+        for line in input_string:
+            line = line.strip()
+            output = int(line.split(sep)[-1:][0])
+            result = [0 for i in unique]
+            result[unique.index(output)] = 1
+
+            self.cases.append([line.split(sep)[0:-1], result])
+
+        self.organize_cases()
 
 
     def get_training_cases(self): return self.training_cases
@@ -299,28 +315,46 @@ class Caseman():
 
 # After running this, open a Tensorboard (Go to localhost:6006 in your Chrome Browser) and check the
 # 'scalar', 'distribution' and 'histogram' menu options to view the probed variables.
-def autoex(epochs=300,nbits=4,lrate=0.03,showint=100,mbs=None,vfrac=0.1,tfrac=0.1,vint=100,sm=False,bestk=None):
+def autoex(epochs=500,nbits=4,lrate=0.1,showint=100,mbs=None,vfrac=0.1,tfrac=0.1,vint=100,sm=False,bestk=1):
     size = 2**nbits
-    mbs = mbs if mbs else size
+    mbs = mbs if mbs else size*3
     case_generator = (lambda : TFT.gen_all_one_hot_cases(2**nbits))
     cman = Caseman(cfunc=case_generator,vfrac=vfrac,tfrac=tfrac)
-    ann = Gann(dims=[size,nbits,size],cman=cman,lrate=lrate,showint=showint,mbs=mbs,vint=vint,softmax=sm)
+    ann = Gann(dims=[size,nbits,size],cman=cman,lrate=lrate,showint=showint,mbs=mbs,softmax=sm)
     #ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
     #ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
     #ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
     ann.run(epochs,bestk=bestk)
-    ann.runmore(epochs*2,bestk=bestk)
+    #ann.runmore(epochs*2,bestk=bestk)
     return ann
 
-def countex(epochs=300,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0.1,tfrac=0.1,vint=200,sm=True,bestk=1):
+def countex(epochs=10000,nbits=15,ncases=500,lrate=0.4,showint=100,mbs=20,vfrac=0.1,tfrac=0.1,sm=False,bestk=1):
     case_generator = (lambda: TFT.gen_vector_count_cases(ncases,nbits))
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac)
-    ann = Gann(dims=[nbits, nbits*3, nbits+1], cman=cman, lrate=lrate, showint=showint, mbs=mbs, vint=vint, softmax=sm)
+    ann = Gann(dims=[nbits, 20, nbits+1], cman=cman, lrate=lrate, showint=showint, vint=100, mbs=mbs, softmax=sm)
     ann.run(epochs,bestk=bestk)
     return ann
 
+def wineex(epochs=100, lrate=0.1, showint=100, mbs=22, vfrac=0.1, tfrac=0.1, sm=False, bestk=1):
+    cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
+    cman.add_cases_from_file("winequality_red.txt", sep=";")
+    ann = Gann(dims=[11, 55, 6], cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm)
+    ann.run(epochs, bestk=bestk)
 
-caseman = Caseman(None)
-caseman.add_cases_from_file("winequality_red.txt")
-print(caseman.cases)
+def glassex(epochs=100, lrate=0.3, showint=100, mbs=18, vfrac=0.1, tfrac=0.1, sm=False, bestk=1):
+    cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
+    cman.add_cases_from_file("glass.txt", sep=",")
+    ann = Gann(dims=[9, 45, 6], cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm)
+    ann.run(epochs, bestk=bestk)
+
+def yeastex(epochs=500, lrate=0.5, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, sm=False, bestk=1):
+    cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
+    cman.add_cases_from_file("yeast.txt", sep=",")
+    ann = Gann(dims=[8, 12, 10], cman=cman, lrate=lrate, vint=100, showint=showint, mbs=mbs, softmax=sm)
+    ann.run(epochs, bestk=bestk)
+
+
+#glassex()
+yeastex()
 #countex()
+#wineex()
