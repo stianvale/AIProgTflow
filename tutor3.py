@@ -9,7 +9,7 @@ import tflowtools as TFT
 
 class Gann():
 
-    def __init__(self, dims, cman,lrate=.1,showint=None,mbs=10,vint=None,softmax=False):
+    def __init__(self, dims, cman,lrate=.1,showint=None,mbs=10,vint=None,softmax=False, hidac=(lambda x: tf.nn.relu(x)), outac=(lambda x: tf.nn.relu(x)), cfunc="rmse", wgt_range=(-1,1)):
         self.learning_rate = lrate
         self.layer_sizes = dims # Sizes of each layer of neurons
         self.show_interval = showint # Frequency of showing grabbed variables
@@ -22,6 +22,10 @@ class Gann():
         self.caseman = cman
         self.softmax_outputs = softmax
         self.modules = []
+        self.hidac=hidac
+        self.outac=outac
+        self.cfunc=cfunc
+        self.wgt_range=wgt_range
         self.build()
 
     # Probed variables are to be displayed in the Tensorboard.
@@ -46,19 +50,27 @@ class Gann():
         invar = self.input; insize = num_inputs
         # Build all of the modules
         for i,outsize in enumerate(self.layer_sizes[1:]):
-            gmod = Gannmodule(self,i,invar,insize,outsize)
+            gmod = None
+            if(i == len(self.layer_sizes)-2):
+                gmod = Gannmodule(self,i,invar,insize,outsize,self.hidac,self.wgt_range)
+            else:
+                gmod = Gannmodule(self,i,invar,insize,outsize,self.outac,self.wgt_range)
             invar = gmod.output; insize = gmod.outsize
         self.output = gmod.output # Output of last module is output of whole network
         if self.softmax_outputs: self.output = tf.nn.softmax(self.output)
         self.target = tf.placeholder(tf.float64,shape=(None,gmod.outsize),name='Target')
-        self.configure_learning()
+        self.configure_learning(gmod)
 
     # The optimizer knows to gather up all "trainable" variables in the function graph and compute
     # derivatives of the error function with respect to each component of each variable, i.e. each weight
     # of the weight array.
 
-    def configure_learning(self):
-        self.error = tf.reduce_mean(tf.square(self.target - self.output),name='MSE')
+    def configure_learning(self, gmod):
+        self.error = None
+        if(self.cfunc == "rmse"):
+            self.error = tf.reduce_mean(tf.square(self.target - self.output),name='MSE')
+        elif(self.cfunc == "xent"):
+            self.error = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.target, name="xEnt")
         self.predictor = self.output  # Simple prediction runs will request the value of output neurons
         # Defining the training operator
         optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
@@ -77,6 +89,8 @@ class Gann():
                 feeder = {self.input: inputs, self.target: targets}
                 _,grabvals,_ = self.run_one_step([self.trainer],gvars,self.probes,session=sess,
                                          feed_dict=feeder,step=step,show_interval=self.show_interval)
+                if(cstart > ncases-mbs):
+                    break
                 error += grabvals[0]
             self.error_history.append((step, error/nmb))
             self.consider_validation_testing(step,sess)
@@ -215,22 +229,25 @@ class Gann():
 # A general ann module = a layer of neurons (the output) plus its incoming weights and biases.
 class Gannmodule():
 
-    def __init__(self,ann,index,invariable,insize,outsize):
+    def __init__(self,ann,index,invariable,insize,outsize,acfunc,wgt_range):
         self.ann = ann
         self.insize=insize  # Number of neurons feeding into this module
         self.outsize=outsize # Number of neurons in this module
         self.input = invariable  # Either the gann's input variable or the upstream module's output
         self.index = index
         self.name = "Module-"+str(self.index)
+        self.acfunc = acfunc
+        self.wgt_range = wgt_range
         self.build()
 
     def build(self):
         mona = self.name; n = self.outsize
-        self.weights = tf.Variable(np.random.uniform(-.1, .1, size=(self.insize,n)),
+        low_lim = self.wgt_range[0]; up_lim = self.wgt_range[1]
+        self.weights = tf.Variable(np.random.uniform(low_lim, up_lim, size=(self.insize,n)),
                                    name=mona+'-wgt',trainable=True) # True = default for trainable anyway
-        self.biases = tf.Variable(np.random.uniform(-.1, .1, size=n),
+        self.biases = tf.Variable(np.random.uniform(low_lim, up_lim, size=n),
                                   name=mona+'-bias', trainable=True)  # First bias vector
-        self.output = tf.tanh(tf.matmul(self.input,self.weights)+self.biases,name=mona+'-out')
+        self.output = self.acfunc(tf.matmul(self.input,self.weights)+self.biases,mona+'-out')
         self.ann.add_module(self)
 
     def getvar(self,type):  # type = (in,out,wgt,bias)
@@ -353,8 +370,24 @@ def yeastex(epochs=500, lrate=0.5, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, s
     ann = Gann(dims=[8, 12, 10], cman=cman, lrate=lrate, vint=100, showint=showint, mbs=mbs, softmax=sm)
     ann.run(epochs, bestk=bestk)
 
+def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showint=100, mbs=50, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
+                hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[8,9,10], 
+                cfunc="xent", wgt_range=(-.3,.3)    ):
+    cman = None
+    if(isinstance(datasrc, str)):
+        cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
+        cman.add_cases_from_file(datasrc, sep=data_sep)
+    else:
+        cman = Caseman(cfunc=datasrc, vfrac=vfrac, tfrac=tfrac)
 
+    ann = Gann(dims=layerlist, cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm, hidac=hidac, outac=outac, cfunc=cfunc, wgt_range=wgt_range)
+    ann.run(epochs, bestk=bestk)
+
+
+
+
+mainfunc()
 #glassex()
-yeastex()
+#yeastex()
 #countex()
 #wineex()
