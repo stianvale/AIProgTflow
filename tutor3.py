@@ -4,8 +4,15 @@ import math
 import matplotlib.pyplot as PLT
 import tflowtools as TFT
 
+##TODO: Normalize input values 
+##TODO: Change initial weights to [-1/sqrt(n), 1/sqrt(n)]
+##TODO: do_mapping, similar til do_testing but with self.predictor
+##Consider not using softmax on output layer when using cross entropy.. 
+
 # ******* A General Artificial Neural Network ********
 # This is the original GANN, which has been improved in the file gann.py
+
+
 
 class Gann():
 
@@ -104,6 +111,7 @@ class Gann():
 
     def do_testing(self,sess,cases,msg='Testing',bestk=None):
         inputs = [c[0] for c in cases]; targets = [c[1] for c in cases]
+        TFT.dendrogram(inputs, targets)
         feeder = {self.input: inputs, self.target: targets}
         self.test_func = self.error
         if bestk is not None:
@@ -345,7 +353,7 @@ def autoex(epochs=500,nbits=4,lrate=0.1,showint=100,mbs=None,vfrac=0.1,tfrac=0.1
     #ann.runmore(epochs*2,bestk=bestk)
     return ann
 
-def countex(epochs=10000,nbits=15,ncases=500,lrate=0.4,showint=100,mbs=20,vfrac=0.1,tfrac=0.1,sm=False,bestk=1):
+def countex(epochs=500,nbits=15,ncases=500,lrate=0.4,showint=100,mbs=20,vfrac=0.1,tfrac=0.1,sm=False,bestk=1):
     case_generator = (lambda: TFT.gen_vector_count_cases(ncases,nbits))
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac)
     ann = Gann(dims=[nbits, 20, nbits+1], cman=cman, lrate=lrate, showint=showint, vint=100, mbs=mbs, softmax=sm)
@@ -385,7 +393,6 @@ def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showin
     ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
     ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
     ann.run(epochs, bestk=bestk)
-
 
 
 
