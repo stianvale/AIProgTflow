@@ -183,7 +183,7 @@ class Gann():
         self.training_session(epochs,sess=sess,continued=continued)
         self.test_on_trains(sess=self.current_session,bestk=bestk)
         self.testing_session(sess=self.current_session,bestk=bestk)
-        self.close_current_session(view=False)
+        self.close_current_session(view=True)
         PLT.ioff()
 
     # After a run is complete, runmore allows us to do additional training on the network, picking up where we
@@ -381,6 +381,9 @@ def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showin
         cman = Caseman(cfunc=datasrc, vfrac=vfrac, tfrac=tfrac)
 
     ann = Gann(dims=layerlist, cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm, hidac=hidac, outac=outac, cfunc=cfunc, wgt_range=wgt_range)
+    ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
+    ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
+    ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
     ann.run(epochs, bestk=bestk)
 
 
