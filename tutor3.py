@@ -3,6 +3,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as PLT
 import tflowtools as TFT
+import config
 
 ##TODO: Normalize input values 
 ##TODO: Change initial weights to [-1/sqrt(n), 1/sqrt(n)]
@@ -102,6 +103,7 @@ class Gann():
             self.error_history.append((step, error/nmb))
             self.consider_validation_testing(step,sess)
         self.global_training_step += epochs
+        print("not(continued): ", not(continued))
         TFT.plot_training_history(self.error_history,self.validation_history,xtitle="Epoch",ytitle="Error",
                                   title="",fig=not(continued))
 
@@ -111,7 +113,7 @@ class Gann():
 
     def do_testing(self,sess,cases,msg='Testing',bestk=None):
         inputs = [c[0] for c in cases]; targets = [c[1] for c in cases]
-        TFT.dendrogram(inputs, targets)
+        #TFT.dendrogram(inputs, targets)
         feeder = {self.input: inputs, self.target: targets}
         self.test_func = self.error
         if bestk is not None:
@@ -395,8 +397,18 @@ def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showin
     ann.run(epochs, bestk=bestk)
 
 
+def configAndRun(name):
 
-mainfunc()
+    key = name.upper() + '_CONFIG'
+    dict = getattr(config, key)
+    
+    mainfunc(epochs = dict['epochs'], datasrc=dict['datasrc'], data_sep=dict['data_sep'], lrate=dict['lrate'], showint=dict['showint'], 
+                mbs=dict['mbs'], vfrac=dict['vfrac'], tfrac=dict['tfrac'], sm=dict['sm'], bestk=dict['bestk'], 
+                hidac=dict['hidac'], outac=dict['outac'], layerlist=dict['layerlist'], 
+                cfunc=dict['cfunc'], wgt_range=dict['wgt_range'])
+
+
+configAndRun("wine")
 #glassex()
 #yeastex()
 #countex()
