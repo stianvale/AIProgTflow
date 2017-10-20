@@ -127,6 +127,10 @@ class Gann():
 
     def gen_match_counter(self, logits, labels, k=1):
         correct = tf.nn.in_top_k(tf.cast(logits,tf.float32), labels, k) # Return number of correct outputs
+        print("--------------------")
+        tf.Print(logits, [logits])
+        tf.Print(labels, [labels])
+        a= input()
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
     def training_session(self,epochs,sess=None,dir="probeview",continued=False):
@@ -183,7 +187,7 @@ class Gann():
         self.training_session(epochs,sess=sess,continued=continued)
         self.test_on_trains(sess=self.current_session,bestk=bestk)
         self.testing_session(sess=self.current_session,bestk=bestk)
-        self.close_current_session(view=True)
+        self.close_current_session(view=False)
         PLT.ioff()
 
     # After a run is complete, runmore allows us to do additional training on the network, picking up where we
@@ -299,6 +303,7 @@ class Caseman():
 
     def add_cases_from_file(self, filestring, sep):
         unique=[]
+        count=[0 for i in range(10)]
         with open(filestring) as f:
             input_string = f.readlines()
 
@@ -317,8 +322,14 @@ class Caseman():
             output = int(line.split(sep)[-1:][0])
             result = [0 for i in unique]
             result[unique.index(output)] = 1
+            count[unique.index(output)] += 1
 
-            self.cases.append([line.split(sep)[0:-1], result])
+            inpt = [float(i) for i in line.split(sep)[0:-1]]
+            self.cases.append([inpt, result])
+
+        print(count)
+        print(sum(count))
+        print(self.cases)
 
         self.organize_cases()
 
@@ -364,13 +375,13 @@ def glassex(epochs=100, lrate=0.3, showint=100, mbs=18, vfrac=0.1, tfrac=0.1, sm
     ann = Gann(dims=[9, 45, 6], cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm)
     ann.run(epochs, bestk=bestk)
 
-def yeastex(epochs=500, lrate=0.5, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, sm=False, bestk=1):
+def yeastex(epochs=500, lrate=0.3, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, sm=False, bestk=1):
     cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
     cman.add_cases_from_file("yeast.txt", sep=",")
     ann = Gann(dims=[8, 12, 10], cman=cman, lrate=lrate, vint=100, showint=showint, mbs=mbs, softmax=sm)
     ann.run(epochs, bestk=bestk)
 
-def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showint=100, mbs=50, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
+def mainfunc(   epochs=100, datasrc="yeast.txt", data_sep=",", lrate=0.3, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
                 hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[8,9,10], 
                 cfunc="xent", wgt_range=(-.3,.3)    ):
     cman = None
@@ -381,15 +392,18 @@ def mainfunc(   epochs=500, datasrc="yeast.txt", data_sep=",", lrate=0.1, showin
         cman = Caseman(cfunc=datasrc, vfrac=vfrac, tfrac=tfrac)
 
     ann = Gann(dims=layerlist, cman=cman, lrate=lrate, showint=showint, mbs=mbs, softmax=sm, hidac=hidac, outac=outac, cfunc=cfunc, wgt_range=wgt_range)
-    ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
-    ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
-    ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
+    #ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
+    #ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
+    #ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
+    #ann.add_grabvar(1,'out')
     ann.run(epochs, bestk=bestk)
 
 
 
-
 mainfunc()
+#mainfunc(   epochs=10, datasrc="winequality_red.txt", data_sep=";", lrate=0.1, showint=100, mbs=10, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
+#                hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[11,9,6], 
+#                cfunc="rmse", wgt_range=(-3,3)    )
 #glassex()
 #yeastex()
 #countex()
