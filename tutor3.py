@@ -3,9 +3,17 @@ import numpy as np
 import math
 import matplotlib.pyplot as PLT
 import tflowtools as TFT
+import config
+
+##TODO: Normalize input values 
+##TODO: Change initial weights to [-1/sqrt(n), 1/sqrt(n)]
+##TODO: do_mapping, similar til do_testing but with self.predictor
+##Consider not using softmax on output layer when using cross entropy.. 
 
 # ******* A General Artificial Neural Network ********
 # This is the original GANN, which has been improved in the file gann.py
+
+
 
 class Gann():
 
@@ -95,6 +103,7 @@ class Gann():
             self.error_history.append((step, error/nmb))
             self.consider_validation_testing(step,sess)
         self.global_training_step += epochs
+        print("not(continued): ", not(continued))
         TFT.plot_training_history(self.error_history,self.validation_history,xtitle="Epoch",ytitle="Error",
                                   title="",fig=not(continued))
 
@@ -104,6 +113,7 @@ class Gann():
 
     def do_testing(self,sess,cases,msg='Testing',bestk=None):
         inputs = [c[0] for c in cases]; targets = [c[1] for c in cases]
+        #TFT.dendrogram(inputs, targets)
         feeder = {self.input: inputs, self.target: targets}
         self.test_func = self.error
         if bestk is not None:
@@ -356,7 +366,7 @@ def autoex(epochs=500,nbits=4,lrate=0.1,showint=100,mbs=None,vfrac=0.1,tfrac=0.1
     #ann.runmore(epochs*2,bestk=bestk)
     return ann
 
-def countex(epochs=10000,nbits=15,ncases=500,lrate=0.4,showint=100,mbs=20,vfrac=0.1,tfrac=0.1,sm=False,bestk=1):
+def countex(epochs=500,nbits=15,ncases=500,lrate=0.4,showint=100,mbs=20,vfrac=0.1,tfrac=0.1,sm=False,bestk=1):
     case_generator = (lambda: TFT.gen_vector_count_cases(ncases,nbits))
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac)
     ann = Gann(dims=[nbits, 20, nbits+1], cman=cman, lrate=lrate, showint=showint, vint=100, mbs=mbs, softmax=sm)
@@ -399,11 +409,23 @@ def mainfunc(   epochs=100, datasrc="yeast.txt", data_sep=",", lrate=0.3, showin
     ann.run(epochs, bestk=bestk)
 
 
+def configAndRun(name):
+
+    key = name.upper() + '_CONFIG'
+    dict = getattr(config, key)
+    
+    mainfunc(epochs = dict['epochs'], datasrc=dict['datasrc'], data_sep=dict['data_sep'], lrate=dict['lrate'], showint=dict['showint'], 
+                mbs=dict['mbs'], vfrac=dict['vfrac'], tfrac=dict['tfrac'], sm=dict['sm'], bestk=dict['bestk'], 
+                hidac=dict['hidac'], outac=dict['outac'], layerlist=dict['layerlist'], 
+                cfunc=dict['cfunc'], wgt_range=dict['wgt_range'])
+
 
 mainfunc()
 #mainfunc(   epochs=10, datasrc="winequality_red.txt", data_sep=";", lrate=0.1, showint=100, mbs=10, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
 #                hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[11,9,6], 
 #                cfunc="rmse", wgt_range=(-3,3)    )
+
+configAndRun("wine")
 #glassex()
 #yeastex()
 #countex()
