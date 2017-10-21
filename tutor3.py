@@ -81,7 +81,7 @@ class Gann():
             self.error = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.target, name="xEnt")
         self.predictor = self.output  # Simple prediction runs will request the value of output neurons
         # Defining the training operator
-        optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
+        optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.trainer = optimizer.minimize(self.error,name='Backprop')
 
     def do_training(self,sess,cases,epochs=100,continued=False):
@@ -103,7 +103,6 @@ class Gann():
             self.error_history.append((step, error/nmb))
             self.consider_validation_testing(step,sess)
         self.global_training_step += epochs
-        print("not(continued): ", not(continued))
         TFT.plot_training_history(self.error_history,self.validation_history,xtitle="Epoch",ytitle="Error",
                                   title="",fig=not(continued))
 
@@ -137,10 +136,6 @@ class Gann():
 
     def gen_match_counter(self, logits, labels, k=1):
         correct = tf.nn.in_top_k(tf.cast(logits,tf.float32), labels, k) # Return number of correct outputs
-        print("--------------------")
-        tf.Print(logits, [logits])
-        tf.Print(labels, [labels])
-        a= input()
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
     def training_session(self,epochs,sess=None,dir="probeview",continued=False):
@@ -158,7 +153,7 @@ class Gann():
         if self.validation_interval and (epoch % self.validation_interval == 0):
             cases = self.caseman.get_validation_cases()
             if len(cases) > 0:
-                error = self.do_testing(sess,cases,msg='Validation Testing')
+                error = self.do_testing(sess,cases,msg='Validation Testing',bestk=1)
                 self.validation_history.append((epoch,error))
 
     # Do testing (i.e. calc error without learning) on the training set.
@@ -189,8 +184,8 @@ class Gann():
             if type(v) == np.ndarray and len(v.shape) > 1: # If v is a matrix, use hinton plotting
                 TFT.hinton_plot(v,fig=self.grabvar_figures[fig_index],title= names[i]+ ' at step '+ str(step))
                 fig_index += 1
-            else:
-                print(v, end="\n\n")
+            
+            print(v, end="\n\n")
 
     def run(self,epochs=100,sess=None,continued=False,bestk=None):
         PLT.ion()
@@ -262,6 +257,7 @@ class Gannmodule():
         self.biases = tf.Variable(np.random.uniform(low_lim, up_lim, size=n),
                                   name=mona+'-bias', trainable=True)  # First bias vector
         self.output = self.acfunc(tf.matmul(self.input,self.weights)+self.biases,mona+'-out')
+        tf.Print(self.output,[self.output])
         self.ann.add_module(self)
 
     def getvar(self,type):  # type = (in,out,wgt,bias)
@@ -337,9 +333,7 @@ class Caseman():
             inpt = [float(i) for i in line.split(sep)[0:-1]]
             self.cases.append([inpt, result])
 
-        print(count)
-        print(sum(count))
-        print(self.cases)
+
 
         self.organize_cases()
 
@@ -391,9 +385,9 @@ def yeastex(epochs=500, lrate=0.3, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, s
     ann = Gann(dims=[8, 12, 10], cman=cman, lrate=lrate, vint=100, showint=showint, mbs=mbs, softmax=sm)
     ann.run(epochs, bestk=bestk)
 
-def mainfunc(   epochs=100, datasrc="yeast.txt", data_sep=",", lrate=0.3, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, sm=False, bestk=1, 
-                hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[8,9,10], 
-                cfunc="xent", wgt_range=(-.3,.3)    ):
+def mainfunc(   epochs=300, datasrc=(lambda: TFT.gen_vector_count_cases(500,15)), data_sep=",", lrate=0.5, showint=100, mbs=20, vfrac=0, tfrac=0, sm=False, bestk=1, 
+                hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[15,15,16], 
+                cfunc="rmse", wgt_range=(-.1,.1)    ):
     cman = None
     if(isinstance(datasrc, str)):
         cman = Caseman(cfunc=None, vfrac=vfrac, tfrac=tfrac)
@@ -405,6 +399,10 @@ def mainfunc(   epochs=100, datasrc="yeast.txt", data_sep=",", lrate=0.3, showin
     #ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
     #ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
     #ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
+    #ann.add_grabvar(0,'in')
+    #ann.add_grabvar(0,'wgt')
+    #ann.add_grabvar(0, 'bias')
+    #ann.add_grabvar(0,'out')
     #ann.add_grabvar(1,'out')
     ann.run(epochs, bestk=bestk)
 
@@ -425,7 +423,7 @@ mainfunc()
 #                hidac=(lambda x, y: tf.nn.relu(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[11,9,6], 
 #                cfunc="rmse", wgt_range=(-3,3)    )
 
-configAndRun("wine")
+#configAndRun("wine")
 #glassex()
 #yeastex()
 #countex()
