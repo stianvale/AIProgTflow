@@ -24,7 +24,7 @@ class autoencoder():
         self.build_neural_network(nh,mbs)
 
     def build_neural_network(self,nh,mbs):
-        ios = 7 # ios = input- and output-layer size
+        ios = 8 # ios = input- and output-layer size
         nh = 50
         nh2 = 50
         #nh3 = 100
@@ -35,17 +35,17 @@ class autoencoder():
         self.w1 = tf.Variable(np.random.uniform(low,high,size=(ios,nh)),name='Weights-1')  # first weight array
         self.w2 = tf.Variable(np.random.uniform(low,high,size=(nh,nh2)),name='Weights-2') # second weight array
         self.w3 = tf.Variable(np.random.uniform(low,high,size=(nh2,out_size)),name='Weights-3')
-        #self.w4 = tf.Variable(np.random.uniform(low,high,size=(nh3,out_size)),name='Weights-4')
         self.b1 = tf.Variable(np.random.uniform(low,high,size=nh),name='Bias-1')  # First bias vector
         self.b2 = tf.Variable(np.random.uniform(low,high,size=nh2),name='Bias-2')  # Second bias vector
         self.b3 = tf.Variable(np.random.uniform(low,high,size=out_size),name='Bias-3')
-        #self.b4 = tf.Variable(np.random.uniform(low,high,size=out_size),name='Bias-4')
         self.input = tf.placeholder(tf.float64,shape=(mbs,ios),name='Input')
         self.target = tf.placeholder(tf.float64,shape=(mbs,out_size),name='Target')
         self.hidden = tf.tanh(tf.matmul(self.input,self.w1) + self.b1,name="Hiddens")
         self.hidden2 = tf.tanh(tf.matmul(self.hidden,self.w2) + self.b2,name="Hiddens")
-        #self.hidden3 = tf.tanh(tf.matmul(self.hidden2,self.w3) + self.b3,name="Hiddens")
         self.output = tf.nn.softmax(tf.matmul(self.hidden2,self.w3) + self.b3, name = "Outputs")
+
+
+
         self.error = tf.reduce_mean(tf.square(self.target - self.output),name='MSE')
         #self.error = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.target, name="xEnt")
         self.predictor = self.output  # Simple prediction runs will request the value of outputs
@@ -142,7 +142,7 @@ class autoencoder():
         print("Score: "+str(100*correct/len(predictions))+"%")
         self.correct_percent = correct/len(predictions)
 
-
+        print(self.cases[-50][0])
         print(predictions[-50])
         print(self.cases[-50][1])
 
@@ -177,16 +177,17 @@ class autoencoder():
 
 class Caseman():
 
-    def __init__(self,cfunc,vfrac=0,tfrac=0,norm=True, stdeviation=True):
+    def __init__(self,cfunc,sep=",",vfrac=0,tfrac=0, stdeviation=True):
         self.casefunc = cfunc
         self.validation_fraction = vfrac
         self.test_fraction = tfrac
         self.training_fraction = 1 - (vfrac + tfrac)
-        self.norm = norm
         self.stdeviation = stdeviation
-        if(cfunc != None):
+        if(not isinstance(cfunc, str)):
             self.generate_cases()
             self.organize_cases()
+        else:
+            self.add_cases_from_file(cfunc, sep)
 
     def generate_cases(self):
         self.cases = self.casefunc()  # Run the case generator.  Case = [input-vector, target-vector]
@@ -207,6 +208,9 @@ class Caseman():
             input_string = f.readlines()
 
         self.cases = []
+
+        if (filestring == "mnist.txt"):
+            input_string = input_string[0:600]
 
         for line in input_string:
             line = line.strip()
@@ -229,16 +233,6 @@ class Caseman():
 
         self.organize_cases()
 
-        if(filestring == "yeast.txt"):     
-            for case in self.cases:
-                case[0] = case[0][1:]
-
-        if(self.norm):
-            for case in self.cases:
-                inpt = case[0]
-                norm = np.linalg.norm(inpt)
-                case[0] = np.divide(case[0],norm)
-
 
         if(self.stdeviation):
             for i in range(len(self.cases[0][0])):
@@ -247,14 +241,6 @@ class Caseman():
                 avg = np.mean(featurelist)
                 for case in self.cases:
                     case[0][i] = (case[0][i]-avg)/std
-
-
-        print(self.cases)
-        print(len(self.cases))
-        a = input()
-
-
-
 
 
     def get_training_cases(self): return self.training_cases
@@ -282,11 +268,11 @@ def calc_avg_vect_dist(vectors):
 #  A test of the autoencoder
 
 def autoex1(epochs=1000000,num_bits=15,lrate=1,tint=100,showint=10000,mbs=53):
-    case_generator = None
+    #case_generator = (lambda: TFT.gen_all_parity_cases(10))
     #case_generator = (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8))
-    case_generator = (lambda: TFT.gen_vector_count_cases(500,15))
-    cman = Caseman(cfunc=case_generator, vfrac=0, tfrac=0, norm=False, stdeviation=True)
-    cman.add_cases_from_file("yeast.txt", sep=",")
+    #case_generator = (lambda: TFT.gen_vector_count_cases(500,15))
+    case_generator = "yeast.txt"
+    cman = Caseman(cfunc=case_generator, sep=",", vfrac=0, tfrac=0, stdeviation=True)
     ann = autoencoder(nh=num_bits,lr=lrate,cman=cman, mbs=mbs)
     PLT.ion()
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
