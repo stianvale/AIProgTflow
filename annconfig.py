@@ -18,7 +18,8 @@ YEAST_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
 }
 
 WINE_CONFIG = {
@@ -36,7 +37,8 @@ WINE_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
 }
 
 GLASS_CONFIG = {
@@ -54,7 +56,8 @@ GLASS_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
 }
 
 MNIST_CONFIG = {
@@ -72,7 +75,8 @@ MNIST_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
 }
 
 IRIS_CONFIG = {
@@ -90,7 +94,8 @@ IRIS_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
 }
 
 PARITY_CONFIG = {
@@ -108,11 +113,12 @@ PARITY_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 20
 }
 
-SEGCOUNT_CONFIG = {
-	'name': "segcount",
+SEGCOUNTER_CONFIG = {
+	'name': "segcounter",
 	'epochs': 1000,
 	'lrate': "scale",
 	'tint': 100,
@@ -126,11 +132,31 @@ SEGCOUNT_CONFIG = {
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 20
 }
 
-BITCOUNT_CONFIG = {
-	'name': "bitcount",
+BITCOUNTER_CONFIG = {
+	'name': "bitcounter",
+	'epochs': 1000,
+	'lrate': "scale",
+	'tint': 100,
+	'showint': 100,
+	'mbs': 100,
+	'wgt_range': (-.3,.3),
+	'hidden_layers':[50,50],
+	'hidac': (lambda x, y: tf.tanh(x,name=y)),
+	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
+	'case_generator': (lambda: TFT.gen_vector_count_cases(500,15)),
+	'stdeviation': True,
+	'vfrac': 0.1 ,
+	'tfrac': 0.1,
+	'cfunc': 'rmse',
+	'mapbs': 20
+}
+
+AUTOENCODER_CONFIG = {
+	'name': "autoencoder",
 	'epochs': 3000,
 	'lrate': "scale",
 	'tint': 100,
@@ -140,12 +166,16 @@ BITCOUNT_CONFIG = {
 	'hidden_layers':[50,50],
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
-	'case_generator': (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8)),
+	'case_generator': (lambda: TFT.gen_all_one_hot_cases(8)),
 	'stdeviation': True,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
-	'cfunc': 'rmse'
+	'cfunc': 'rmse',
+	'mapbs': 0
+	
 }
+
+
 
 
 

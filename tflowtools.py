@@ -304,7 +304,6 @@ def simple_plot(yvals,xvals=None,xtitle='X',ytitle='Y',title='Y = F(X)'):
     a = input()
     PLT.plot(xvals,yvals)
     PLT.xlabel(xtitle); PLT.ylabel(ytitle); PLT.title(title)
-    print("COMES HERE")
     #PLT.draw()
     PLT.show(block=True)
 

@@ -4,11 +4,18 @@ import matplotlib.pyplot as PLT
 import tflowtools as TFT
 import math
 import annconfig
+import random
 
 # **** Autoencoder ****
 # We can extend the basic approach in tfex8 (tutor1.py) to handle a) a 3-layered neural network, and b) a collection
 # of cases to be learned.  This is a specialized neural network designed to solve one type of classification
 #  problem: converting an input string, through a single hidden layer, to a copy of itself on the output end.
+
+##TODO: mapping
+##TODO: dendrograms
+##TODO: display weights
+##TODO: display biases
+
 
 class Gann():
 
@@ -129,6 +136,7 @@ class Gann():
         #TFT.simple_plot(errors,xtitle="Epoch",ytitle="Error",title="")
 
         TFT.plot_training_history(self.train_error, self.val_error)
+        
 
 
 
@@ -187,8 +195,46 @@ class Gann():
         print(testset.capitalize() + " score: "+str(round(100*correct/len(predictions),2))+"%")
         self.correct_percent = correct/len(predictions)
 
-        print(predictions[-50])
-        print(cases[-50][1])
+        print(predictions[-1])
+        print(cases[-1][1])
+
+
+    def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 20):
+        
+        error = 0
+        sess = session if session else self.current_session
+        hidden_activations = []
+        grabvars = [self.input, self.predictor]
+
+        randNum = random.randint(0,len(self.training_cases)-21)
+        cases = self.training_cases[randNum:randNum+20]
+
+        inputs = [c[0] for c in cases]
+        targets = [c[1] for c in cases]
+        predictions = []
+
+        feeder = {self.input: inputs, self.target: targets}
+        _,grabvals,_ = self.run_one_step([self.predictor],grabvars,session=sess,
+                                             feed_dict = feeder,show_interval=None)
+        for val in grabvals[1]:
+            predictions.append(val)
+
+
+        hidden_activations.append(grabvals[0][0])
+
+
+        
+        correct = 0
+        for i, pred in enumerate(predictions):
+
+            if(np.argmax(pred) == np.argmax(cases[i][1])):
+                correct += 1
+
+        print(testset.capitalize() + " score: "+str(round(100*correct/len(predictions),2))+"%")
+        self.correct_percent = correct/len(predictions)
+
+        print(predictions)
+        #print(cases[-1][1])
 
 
 
@@ -340,14 +386,18 @@ def calc_avg_vect_dist(vectors):
 
 def mainfunc(   epochs=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
-                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse"):
-    #case_generator = (lambda: TFT.gen_all_parity_cases(10))
-    #case_generator = (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8))
-    case_generator = (lambda: TFT.gen_vector_count_cases(500,15))
+                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0):
+
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
     PLT.ion()
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
+
+    if(mapbs > 0):
+        ann.do_mapping(mbs = mbs, mapbs = mapbs)
+    ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
+
+
     PLT.ioff()
     TFT.close_session(ann.current_session, False)
     return ann
@@ -360,10 +410,10 @@ def configAndRun(name):
     mainfunc(epochs = myDict['epochs'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
-                cfunc=myDict['cfunc'])
+                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'])
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
-configAndRun("bitcount")
+configAndRun("segcounter")
