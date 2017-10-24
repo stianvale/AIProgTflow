@@ -97,12 +97,11 @@ class Gann():
                 feeder = {self.input: inputs, self.target: targets}
                 _,grabvals,_ = self.run_one_step([self.trainer],gvars,self.probes,session=sess,
                                          feed_dict=feeder,step=step,show_interval=self.show_interval)
-                if(cstart > ncases-mbs):
-                    break
                 error += grabvals[0]
             self.error_history.append((step, error/nmb))
             self.consider_validation_testing(step,sess)
         self.global_training_step += epochs
+
         TFT.plot_training_history(self.error_history,self.validation_history,xtitle="Epoch",ytitle="Error",
                                   title="",fig=not(continued))
 
@@ -385,7 +384,7 @@ def yeastex(epochs=500, lrate=0.3, showint=100, mbs=100, vfrac=0.1, tfrac=0.1, s
     ann = Gann(dims=[8, 12, 10], cman=cman, lrate=lrate, vint=100, showint=showint, mbs=mbs, softmax=sm)
     ann.run(epochs, bestk=bestk)
 
-def mainfunc(   epochs=300, datasrc=(lambda: TFT.gen_vector_count_cases(500,15)), data_sep=",", lrate=0.5, showint=100, mbs=20, vfrac=0, tfrac=0, sm=False, bestk=1, 
+def mainfunc(   epochs=300, datasrc=(lambda: TFT.gen_vector_count_cases(500,15)), data_sep=",", lrate=0.5, showint=100, mbs=21, vfrac=0, tfrac=0, sm=False, bestk=1, 
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), layerlist=[15,15,16], 
                 cfunc="rmse", wgt_range=(-.1,.1)    ):
     cman = None

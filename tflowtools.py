@@ -299,6 +299,9 @@ def pp_matrix(m,style='{:.3f}'):
 
 def simple_plot(yvals,xvals=None,xtitle='X',ytitle='Y',title='Y = F(X)'):
     xvals = xvals if xvals is not None else list(range(len(yvals)))
+    print(xvals)
+    print(yvals)
+    a = input()
     PLT.plot(xvals,yvals)
     PLT.xlabel(xtitle); PLT.ylabel(ytitle); PLT.title(title)
     print("COMES HERE")
@@ -310,12 +313,13 @@ def plot_training_history(error_hist,validation_hist=[],xtitle="Epoch",ytitle="E
     PLT.ion()
     if fig: PLT.figure()
     if len(error_hist) > 0:
-        print("ERROR_HIST")
-        simple_plot([p[1] for p in error_hist], [p[0] for p in error_hist],xtitle=xtitle,ytitle=ytitle,title=title)
+        PLT.plot([p[0] for p in error_hist], [p[1] for p in error_hist])
+        PLT.xlabel(xtitle); PLT.ylabel(ytitle); PLT.title(title)
         #PLT.hold(True)
     if len(validation_hist) > 0:
-        print("VALIDATION_HIST")
-        simple_plot([p[1] for p in validation_hist], [p[0] for p in validation_hist])
+        PLT.plot([p[0] for p in validation_hist], [p[1] for p in validation_hist])
+    PLT.show()
+    a = input()
     PLT.ioff()
 
 # alpha = transparency

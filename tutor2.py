@@ -38,8 +38,8 @@ class autoencoder():
         self.b1 = tf.Variable(np.random.uniform(low,high,size=nh),name='Bias-1')  # First bias vector
         self.b2 = tf.Variable(np.random.uniform(low,high,size=nh2),name='Bias-2')  # Second bias vector
         self.b3 = tf.Variable(np.random.uniform(low,high,size=out_size),name='Bias-3')
-        self.input = tf.placeholder(tf.float64,shape=(mbs,ios),name='Input')
-        self.target = tf.placeholder(tf.float64,shape=(mbs,out_size),name='Target')
+        self.input = tf.placeholder(tf.float64,shape=(None,ios),name='Input')
+        self.target = tf.placeholder(tf.float64,shape=(None,out_size),name='Target')
         self.hidden = tf.tanh(tf.matmul(self.input,self.w1) + self.b1,name="Hiddens")
         self.hidden2 = tf.tanh(tf.matmul(self.hidden,self.w2) + self.b2,name="Hiddens")
         self.output = tf.nn.softmax(tf.matmul(self.hidden2,self.w3) + self.b3, name = "Outputs")

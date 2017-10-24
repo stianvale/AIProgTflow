@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as PLT
 import tflowtools as TFT
 import math
+import annconfig
 
 # **** Autoencoder ****
 # We can extend the basic approach in tfex8 (tutor1.py) to handle a) a 3-layered neural network, and b) a collection
@@ -27,7 +28,9 @@ class Gann():
         self.global_step = 0
         self.mbs = mbs
         self.wgt_range = wgt_range
-        self.cases = cman.get_cases()
+        self.training_cases = cman.get_training_cases()
+        self.validation_cases = cman.get_validation_cases()
+        self.testing_cases = cman.get_testing_cases()
         self.correct_percent = 0
         self.modules = []
         self.build_neural_network(mbs)
@@ -36,17 +39,15 @@ class Gann():
         self.modules.append(module)
 
     def build_neural_network(self,mbs):
-
-        self.input = tf.placeholder(tf.float64,shape=(mbs,self.input_size),name='Input')
-        self.target = tf.placeholder(tf.float64,shape=(mbs,self.output_size),name='Target')
+        tf.reset_default_graph()
+        self.input = tf.placeholder(tf.float64,shape=(None,self.input_size),name='Input')
+        self.target = tf.placeholder(tf.float64,shape=(None,self.output_size),name='Target')
         self.hidden_layers.append(self.output_size)
 
         invar = self.input
         insize = self.input_size
 
         for i, outsize in enumerate(self.hidden_layers):
-            print(i)
-            print(outsize)
             gmod = None
             if(i != len(self.hidden_layers)-1):
                 gmod = Gannmodule(self, i, invar, insize, outsize, self.hidac, self.wgt_range)
@@ -100,109 +101,97 @@ class Gann():
 
     def do_training(self,epochs=100,test_interval=10,show_interval=50,mbs=100):
         errors = []
+        self.val_error = []
+        self.train_error = []
         if test_interval: self.avg_vector_distances = []
         self.current_session = sess = TFT.gen_initialized_session()
         for i in range(epochs):
+            self.current_epoch = i
             error = 0
             grabvars = [self.error]
             step = self.global_step + i
-            ncases = len(self.cases); nmb = math.ceil(ncases/mbs)
+            ncases = len(self.training_cases); nmb = math.ceil(ncases/mbs)
             for cstart in range(0,ncases,mbs):
                 cend = min(ncases,cstart+mbs)
-                minibatch = self.cases[cstart:cend]
+                minibatch = self.training_cases[cstart:cend]
                 feeder = {self.input: [c[0] for c in minibatch], self.target: [c[1] for c in minibatch]}
                 _,grabvals,_ = self.run_one_step([self.trainer],grabvars,step=step,show_interval=show_interval,session=sess,feed_dict=feeder)
                 error += grabvals[0]
 
-            errors.append(error)
+            errors.append([i,error])
             if (test_interval and i % test_interval == 0):
-                self.do_testing(sess,scatter=False,mbs=mbs)
+                self.do_testing(sess,scatter=False,mbs=len(self.training_cases),testset="training")
+                self.do_testing(sess,scatter=False,mbs=len(self.validation_cases),testset="validation")
         PLT.figure()
-        TFT.simple_plot(errors,xtitle="Epoch",ytitle="Error",title="")
-        if test_interval:
-            PLT.figure()
-            TFT.simple_plot(self.avg_vector_distances,xtitle='Epoch',
-                              ytitle='Avg Hidden-Node Vector Distance',title='')
+        self.do_testing(sess,scatter=False,mbs=mbs,testset="testing")
+
+
+        #TFT.simple_plot(errors,xtitle="Epoch",ytitle="Error",title="")
+
+        TFT.plot_training_history(self.train_error, self.val_error)
+
+
 
 
     # This particular testing is ONLY called during training, so it always receives an open session.
-    def do_testing(self,session=None,scatter=True, mbs=100):
+    def do_testing(self,session=None,scatter=True, mbs=100, testset="training"):
+        error = 0
         sess = session if session else self.current_session
         hidden_activations = []
-        grabvars = [self.input, self.predictor]
-        inputs = [c[0] for c in self.cases]
+        grabvars = [self.input, self.predictor, self.error]
+
+        cases = None
+        if(testset == "training"):
+            cases = self.training_cases
+        elif(testset == "validation"):
+            cases = self.validation_cases
+        elif(testset == "testing"):
+            cases = self.testing_cases
+
+        inputs = [c[0] for c in cases]
         predictions = []
-        ncases = len(self.cases)
+        ncases = len(cases)
         for cstart in range(0,ncases,mbs):
             cend = min(ncases,cstart+mbs)
-            minibatch = self.cases[cstart:cend]
+            minibatch = cases[cstart:cend]
 
-            feeder = {self.input: [c[0] for c in minibatch]}
+            feeder = {self.input: [c[0] for c in minibatch], self.target: [c[1] for c in minibatch]}
             _,grabvals,_ = self.run_one_step([self.predictor],grabvars,session=sess,
                                              feed_dict = feeder,show_interval=None)
             for val in grabvals[1]:
                 predictions.append(val)
+
+
             hidden_activations.append(grabvals[0][0])
-        if scatter:
-            PLT.figure()
-            vs = hidden_activations if self.num_hiddens > 3 else TFT.pca(hidden_activations,2)
-            TFT.simple_scatter_plot(hidden_activations,radius=8)
-        #self.do_testing2(sess=sess)
 
-#for counter
-        # correct = 0
-        # for i, pred in enumerate(predictions):
-        #     if(np.argmax(pred) == sum(inputs[i])):
-        #         correct += 1
+            error += grabvals[2]
 
-        # print("Score: "+str(100*correct/len(predictions))+"%")
 
-        # print(predictions[0:1])
-        # print(inputs[0:1])
 
-        # return hidden_activations
+        if(testset == "validation"):
+            self.val_error.append([self.current_epoch, error])
+        if(testset == "training"):
+            self.train_error.append([self.current_epoch, error])
+        # if scatter:
+        #     PLT.figure()
+        #     vs = hidden_activations if self.num_hiddens > 3 else TFT.pca(hidden_activations,2)
+        #     TFT.simple_scatter_plot(hidden_activations,radius=8)
 
-#for glass
         
         correct = 0
         for i, pred in enumerate(predictions):
 
-            if(np.argmax(pred) == np.argmax(self.cases[i][1])):
+            if(np.argmax(pred) == np.argmax(cases[i][1])):
                 correct += 1
 
-        print("Score: "+str(round(100*correct/len(predictions),2))+"%")
+        print(testset.capitalize() + " score: "+str(round(100*correct/len(predictions),2))+"%")
         self.correct_percent = correct/len(predictions)
 
         print(predictions[-50])
-        print(self.cases[-50][1])
-
-        return hidden_activations
+        print(cases[-50][1])
 
 
-    def do_testing2(self,sess,msg='Testing',bestk=1):
-        inputs = [c[0] for c in self.cases]; targets = [c[1] for c in self.cases]
-        #TFT.dendrogram(inputs, targets)
-        feeder = {self.input: inputs, self.target: targets}
-        if bestk is not None:
-            self.test_func = self.gen_match_counter(self.predictor,[TFT.one_hot_to_int(list(v)) for v in targets],k=bestk)
-        testres, grabvals, _ = self.run_one_step(self.test_func, self.grabvars, self.probes, session=sess,
-                                           feed_dict=feeder,  show_interval=None)
-        if bestk is None:
-            print('%s Set Error = %f ' % (msg, testres))
-        else:
-            print('%s Set Correct Classifications = %f %%' % (msg, 100*(testres/len(cases))))
-        return testres  # self.error uses MSE, so this is a per-case value when bestk=None
 
-    def gen_match_counter(self, logits, labels, k=1):
-        print(logits)
-        labels = tf.convert_to_tensor([labels])
-        print(labels)
-        init = tf.global_variables_initializer()
-
-        sess = tf.Session()
-        sess.run(init)
-        v = sess.run(labels)
-        print(v) # will show you your variable.
 
 class Gannmodule():
 
@@ -289,8 +278,8 @@ class Caseman():
 
         self.cases = []
 
-        if (filestring == "mnist.txt"):
-            input_string = input_string[0:600]
+        # if (filestring == "mnist.txt"):
+        #     input_string = input_string[0:600]
 
         for line in input_string:
             line = line.strip()
@@ -350,20 +339,31 @@ def calc_avg_vect_dist(vectors):
 #  A test of the autoencoder
 
 def mainfunc(   epochs=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
-                hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
-                stdeviation=False, vfrac=0, tfrac=0, cfunc="rmse"):
-    case_generator = (lambda: TFT.gen_all_parity_cases(10))
-    case_generator = (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8))
+                hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
+                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse"):
+    #case_generator = (lambda: TFT.gen_all_parity_cases(10))
+    #case_generator = (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8))
     case_generator = (lambda: TFT.gen_vector_count_cases(500,15))
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
     PLT.ion()
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
-    ann.do_testing(scatter=True,mbs=mbs)  # Do a final round of testing to plot the hidden-layer activation vectors.
     PLT.ioff()
     TFT.close_session(ann.current_session, False)
     return ann
 
-mainfunc()
+def configAndRun(name):
 
+    key = name.upper() + '_CONFIG'
+    myDict = getattr(annconfig, key)
 
+    mainfunc(epochs = myDict['epochs'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
+                wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
+                case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
+                cfunc=myDict['cfunc'])
+
+# mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
+#                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
+#                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
+
+configAndRun("bitcount")
