@@ -12,11 +12,6 @@ from importlib import reload
 # of cases to be learned.  This is a specialized neural network designed to solve one type of classification
 #  problem: converting an input string, through a single hidden layer, to a copy of itself on the output end.
 
-##TODO: mapping
-##TODO: dendrograms
-##TODO: display weights
-##TODO: display biases
-
 
 class Gann():
 
@@ -450,5 +445,5 @@ def configAndRun(name):
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
-configAndRun("autoencoder")
+configAndRun("iris")
 
