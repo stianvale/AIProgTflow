@@ -5,6 +5,7 @@ import tflowtools as TFT
 import math
 import annconfig
 import random
+from importlib import reload
 
 # **** Autoencoder ****
 # We can extend the basic approach in tfex8 (tutor1.py) to handle a) a 3-layered neural network, and b) a collection
@@ -215,12 +216,13 @@ class Gann():
         fig_index = 0
         names = [x.name for x in grabvars[2:]]
         for grabval in grabvals[2:]:
+
+            if(type(grabval[0]) != np.ndarray):
+                grabval = np.array([[c] for c in grabval])
+
             TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
             fig_index += 1
-            print(grabvals)
-            print(len(self.mapvar_figures))
-            print(self.mapvars)
-            a = input()
+
 
         a = input()
 
@@ -278,8 +280,9 @@ class Gannmodule():
 
 class Caseman():
 
-    def __init__(self,cfunc,vfrac=0,tfrac=0, stdeviation=True):
+    def __init__(self,cfrac,cfunc,vfrac=0,tfrac=0, stdeviation=True):
         self.casefunc = cfunc
+        self.case_fraction = cfrac
         self.validation_fraction = vfrac
         self.test_fraction = tfrac
         self.training_fraction = 1 - (vfrac + tfrac)
@@ -299,6 +302,8 @@ class Caseman():
         self.cases = self.casefunc()  # Run the case generator.  Case = [input-vector, target-vector]
 
     def organize_cases(self):
+        seperator0 = round(len(self.cases)*self.case_fraction)
+        self.cases = self.cases[0:seperator0]
         ca = np.array(self.cases)
         np.random.shuffle(ca) # Randomly shuffle all cases
         separator1 = round(len(self.cases) * self.training_fraction)
@@ -362,24 +367,15 @@ class Caseman():
 
 # ********  Auxiliary functions for the autoencoder example *******
 
-def vector_distance(vect1, vect2):
-    return (sum([(v1 - v2) ** 2 for v1, v2 in zip(vect1, vect2)])) ** 0.5
-
-def calc_avg_vect_dist(vectors):
-    n = len(vectors);
-    sum = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            sum += vector_distance(vectors[i], vectors[j])
-    return 2 * sum / (n * (n - 1))
 
 #  A test of the autoencoder
 
 def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
-                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0, map_layers = []):
+                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0, map_layers = [], display_wgts=[], display_biases=[],
+                cfrac=1.0):
 
-    cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
+    cman = Caseman(cfunc=case_generator, cfrac=cfrac, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
     PLT.ion()
     epochs = int(steps/mbs)
@@ -389,6 +385,19 @@ def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_
         if(layer == 0):
             continue
         ann.add_mapvar(layer-1, "out")
+
+
+    for wgts_layer in display_wgts:
+        if(layer == 0):
+            continue
+        ann.add_mapvar(wgts_layer-1, "wgt")
+
+    for bias_layer in display_biases:
+        if(layer == 0):
+            continue
+        ann.add_mapvar(bias_layer-1, "bias")
+
+
     ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
     if(mapbs > 0):
         ann.do_mapping(mbs = mbs, mapbs = mapbs)
@@ -398,14 +407,14 @@ def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_
     return ann
 
 def configAndRun(name):
-
+    reload(annconfig)
     key = name.upper() + '_CONFIG'
     myDict = getattr(annconfig, key)
 
     mainfunc(steps = myDict['steps'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
-                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers=[1,2,3])
+                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers=[1,2,3], display_wgts=[1,2], display_biases=[1], cfrac=1.0)
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
