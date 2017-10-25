@@ -24,7 +24,7 @@ class Gann():
     # lr = learning rate
 
     def __init__(   self,lr=.1,mbs=100,cman=None,wgt_range=(-.1,.1), hidden_layers=[], hidac=(lambda x, y: tf.tanh(x,name=y)),
-                    outac=(lambda x, y: tf.nn.softmax(x,name=y)), cfunc="rmse"):
+                    outac=(lambda x, y: tf.nn.softmax(x,name=y)), cfunc="rmse", dendrogram_layers=[]):
         self.cman = cman
         self.cfunc = cfunc
         self.input_size = cman.get_input_size()
@@ -44,6 +44,9 @@ class Gann():
         self.build_neural_network(mbs)
         self.mapvars = []
         self.mapvar_figures = []
+        self.dendrogram_layers = dendrogram_layers
+
+
 
     def add_module(self, module):
         self.modules.append(module)
@@ -214,8 +217,8 @@ class Gann():
 
 
         fig_index = 0
-        names = [x.name for x in grabvars[2:]]
-        for grabval in grabvals[2:]:
+        names = [x.name for x in grabvars[2:-len(self.dendrogram_layers)]]
+        for grabval in grabvals[2:-len(self.dendrogram_layers)]:
 
             if(type(grabval[0]) != np.ndarray):
                 grabval = np.array([[c] for c in grabval])
@@ -223,8 +226,14 @@ class Gann():
             TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
             fig_index += 1
 
+        input_strings = [TFT.bits_to_str(i) for i in inputs]
+        target_strings = [TFT.bits_to_str(i) for i in targets]
+        for dendro_vals in grabvals[-len(self.dendrogram_layers):]:
+
+            TFT.dendrogram(dendro_vals,input_strings)
 
         a = input()
+
 
 
 
@@ -373,29 +382,35 @@ class Caseman():
 def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0, map_layers = [], display_wgts=[], display_biases=[],
-                cfrac=1.0):
+                cfrac=1.0, dendrogram_layers=[]):
 
     cman = Caseman(cfunc=case_generator, cfrac=cfrac, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
-    ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
+    ann = Gann( lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac,
+                cfunc=cfunc, dendrogram_layers=dendrogram_layers)
     PLT.ion()
     epochs = int(steps/mbs)
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
 
-    for layer in map_layers:
-        if(layer == 0):
+    for out_layer in map_layers:
+        if(out_layer == 0):
             continue
         ann.add_mapvar(layer-1, "out")
 
 
     for wgts_layer in display_wgts:
-        if(layer == 0):
+        if(wgts_layer == 0):
             continue
         ann.add_mapvar(wgts_layer-1, "wgt")
 
     for bias_layer in display_biases:
-        if(layer == 0):
+        if(bias_layer == 0):
             continue
         ann.add_mapvar(bias_layer-1, "bias")
+
+    for dendro_layer in dendrogram_layers:
+        if(dendro_layer == 0):
+            continue
+        ann.add_mapvar(dendro_layer-1, type="out")
 
 
     ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
@@ -415,10 +430,10 @@ def configAndRun(name):
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
                 cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers = myDict['map_layers'], display_wgts=myDict['display_wgts'],
-                display_biases=myDict['display_biases'], cfrac=myDict['cfrac'])
+                display_biases=myDict['display_biases'], cfrac=myDict['cfrac'], dendrogram_layers=myDict['dendrogram_layers'])
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
-configAndRun("bitcounter")
+configAndRun("yeast")

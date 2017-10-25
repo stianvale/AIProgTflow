@@ -19,11 +19,12 @@ YEAST_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0,
+	'mapbs': 20,
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': [1]
 }
 
 WINE_CONFIG = {
@@ -46,7 +47,8 @@ WINE_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 GLASS_CONFIG = {
@@ -69,7 +71,8 @@ GLASS_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 MNIST_CONFIG = {
@@ -92,7 +95,8 @@ MNIST_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 IRIS_CONFIG = {
@@ -115,7 +119,8 @@ IRIS_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 PARITY_CONFIG = {
@@ -138,7 +143,8 @@ PARITY_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 SEGCOUNTER_CONFIG = {
@@ -161,17 +167,18 @@ SEGCOUNTER_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 BITCOUNTER_CONFIG = {
 	'name': "bitcounter",
-	'steps': 100000,
+	'steps': 200000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,
-	'mbs': 100,
-	'wgt_range': (-.3,.3),
+	'mbs': 50,
+	'wgt_range': (-.1,.1),
 	'hidden_layers':[50,50],
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
@@ -184,7 +191,8 @@ BITCOUNTER_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 AUTOENCODER_CONFIG = {
@@ -207,7 +215,8 @@ AUTOENCODER_CONFIG = {
 	'cfrac':1.0,
 	'map_layers': [],
 	'display_wgts': [],
-	'display_biases': []
+	'display_biases': [],
+	'dendrogram_layers': []
 }
 
 
