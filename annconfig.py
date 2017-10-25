@@ -21,8 +21,8 @@ YEAST_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -44,8 +44,8 @@ WINE_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -67,8 +67,8 @@ GLASS_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -90,8 +90,8 @@ MNIST_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -113,8 +113,8 @@ IRIS_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -136,8 +136,8 @@ PARITY_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 20,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -159,8 +159,8 @@ SEGCOUNTER_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 20,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -182,8 +182,8 @@ BITCOUNTER_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 20,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 
@@ -205,8 +205,8 @@ AUTOENCODER_CONFIG = {
 	'cfunc': 'rmse',
 	'mapbs': 0,
 	'cfrac':1.0,
-	'map_layers': []
-	'display_wgts': []
+	'map_layers': [],
+	'display_wgts': [],
 	'display_biases': []
 }
 

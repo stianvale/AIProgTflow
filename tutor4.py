@@ -414,7 +414,8 @@ def configAndRun(name):
     mainfunc(steps = myDict['steps'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
-                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers=[1,2,3], display_wgts=[1,2], display_biases=[1], cfrac=1.0)
+                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers = myDict['map_layers'], display_wgts=myDict['display_wgts'],
+                display_biases=myDict['display_biases'], cfrac=myDict['cfrac'])
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
