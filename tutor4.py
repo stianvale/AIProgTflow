@@ -205,16 +205,13 @@ class Gann():
         print(cases[-1][1])
 
 
-    def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 10):
+    def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 10, numeric = False):
 
 
         sess = session if session else self.current_session
         grabvars = [self.input, self.predictor]
 
         grabvars += self.mapvars
-
-
-        print(self.training_cases)
 
         randNum = random.randint(0,len(self.training_cases)-mapbs)
         cases = self.training_cases[randNum:randNum+mapbs]
@@ -237,7 +234,10 @@ class Gann():
             if(type(grabval[0]) != np.ndarray):
                 grabval = np.array([[c] for c in grabval])
 
-            TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
+            if numeric:
+                TFT.display_matrix(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
+            else: 
+                TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
             fig_index += 1
 
 
@@ -245,7 +245,7 @@ class Gann():
         target_strings = [TFT.bits_to_str(i) for i in targets]
         for dendro_vals in grabvals[-len(self.dendrogram_layers):]:
 
-            TFT.dendrogram(dendro_vals,input_strings)
+            TFT.dendrogram(dendro_vals,target_strings)
 
         a = input()
 
@@ -397,7 +397,7 @@ class Caseman():
 def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0, map_layers = [], display_wgts=[], display_biases=[],
-                cfrac=1.0, dendrogram_layers=[]):
+                cfrac=1.0, dendrogram_layers=[], numeric = False):
 
     cman = Caseman(cfunc=case_generator, cfrac=cfrac, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann( lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac,
@@ -428,7 +428,7 @@ def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_
 
     ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
     if(mapbs > 0):
-        ann.do_mapping(mbs = mbs, mapbs = mapbs)
+        ann.do_mapping(mbs = mbs, mapbs = mapbs, numeric = numeric)
 
     PLT.ioff()
     TFT.close_session(ann.current_session, False)
@@ -439,14 +439,16 @@ def configAndRun(name):
     key = name.upper() + '_CONFIG'
     myDict = getattr(annconfig, key)
 
-    mainfunc(steps = myDict['steps'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
+    mainfunc(   steps = myDict['steps'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
                 cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers = myDict['map_layers'], display_wgts=myDict['display_wgts'],
-                display_biases=myDict['display_biases'], cfrac=myDict['cfrac'], dendrogram_layers=myDict['dendrogram_layers'])
+                display_biases=myDict['display_biases'], cfrac=myDict['cfrac'], dendrogram_layers=myDict['dendrogram_layers'],
+                numeric = myDict['numeric'])
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
 configAndRun("autoencoder")
+

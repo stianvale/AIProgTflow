@@ -24,7 +24,8 @@ YEAST_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': [1]
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 WINE_CONFIG = {
@@ -48,7 +49,8 @@ WINE_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 GLASS_CONFIG = {
@@ -72,31 +74,33 @@ GLASS_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 MNIST_CONFIG = {
 	'name': "mnist",
-	'steps': 50000,
+	'steps': 90000,
 	'lrate': "scale",
-	'tint': 100,
+	'tint': 10,
 	'showint': 1000,
-	'mbs': 50,
+	'mbs': 300,
 	'wgt_range': (-.3,.3),
 	'hidden_layers':[50,50],
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
 	'case_generator': "mnist.txt",
-	'stdeviation': True,
+	'stdeviation': False,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0,
+	'mapbs': 20,
 	'cfrac':1.0,
-	'map_layers': [],
+	'map_layers': [1,2,3],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [2],
+	'numeric': False
 }
 
 IRIS_CONFIG = {
@@ -120,7 +124,8 @@ IRIS_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 PARITY_CONFIG = {
@@ -135,7 +140,7 @@ PARITY_CONFIG = {
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
 	'case_generator': (lambda: TFT.gen_all_parity_cases(10)),
-	'stdeviation': True,
+	'stdeviation': False,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
@@ -144,7 +149,8 @@ PARITY_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 SEGCOUNTER_CONFIG = {
@@ -159,7 +165,7 @@ SEGCOUNTER_CONFIG = {
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
 	'case_generator': (lambda: TFT.gen_segmented_vector_cases(25,1000,0,8)),
-	'stdeviation': True,
+	'stdeviation': False,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
@@ -168,7 +174,8 @@ SEGCOUNTER_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 BITCOUNTER_CONFIG = {
@@ -183,7 +190,7 @@ BITCOUNTER_CONFIG = {
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
 	'case_generator': (lambda: TFT.gen_vector_count_cases(500,15)),
-	'stdeviation': True,
+	'stdeviation': False,
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
@@ -192,7 +199,8 @@ BITCOUNTER_CONFIG = {
 	'map_layers': [],
 	'display_wgts': [],
 	'display_biases': [],
-	'dendrogram_layers': []
+	'dendrogram_layers': [],
+	'numeric': False
 }
 
 AUTOENCODER_CONFIG = {
@@ -207,16 +215,17 @@ AUTOENCODER_CONFIG = {
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
 	'case_generator': (lambda: TFT.gen_all_one_hot_cases(3)),
-	'stdeviation': True,
+	'stdeviation': False,
 	'vfrac': 0.0 ,
 	'tfrac': 0.0,
 	'cfunc': 'rmse',
 	'mapbs': 3,
 	'cfrac':1.0,
 	'map_layers': [0,1,2],
-	'display_wgts': [1],
-	'display_biases': [1],
-	'dendrogram_layers': [1]
+	'display_wgts': [1,2],
+	'display_biases': [1,2],
+	'dendrogram_layers': [1],
+	'numeric': False
 }
 
 
