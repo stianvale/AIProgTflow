@@ -382,7 +382,7 @@ def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
     PLT.ion()
-    epochs = steps/mbs
+    epochs = int(steps/mbs)
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
 
     for layer in map_layers:
@@ -411,4 +411,4 @@ def configAndRun(name):
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
-configAndRun("segcounter")
+configAndRun("bitcounter")

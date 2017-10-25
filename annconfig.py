@@ -19,7 +19,11 @@ YEAST_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 WINE_CONFIG = {
@@ -38,7 +42,11 @@ WINE_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 GLASS_CONFIG = {
@@ -57,7 +65,11 @@ GLASS_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 MNIST_CONFIG = {
@@ -76,7 +88,11 @@ MNIST_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 IRIS_CONFIG = {
@@ -95,7 +111,11 @@ IRIS_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 PARITY_CONFIG = {
@@ -114,7 +134,11 @@ PARITY_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 20
+	'mapbs': 20,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 SEGCOUNTER_CONFIG = {
@@ -133,7 +157,11 @@ SEGCOUNTER_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 20
+	'mapbs': 20,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 BITCOUNTER_CONFIG = {
@@ -152,7 +180,11 @@ BITCOUNTER_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 20
+	'mapbs': 20,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 AUTOENCODER_CONFIG = {
@@ -171,8 +203,11 @@ AUTOENCODER_CONFIG = {
 	'vfrac': 0.1 ,
 	'tfrac': 0.1,
 	'cfunc': 'rmse',
-	'mapbs': 0
-	
+	'mapbs': 0,
+	'cfrac':1.0,
+	'map_layers': []
+	'display_wgts': []
+	'display_biases': []
 }
 
 
