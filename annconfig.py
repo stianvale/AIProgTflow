@@ -5,7 +5,7 @@ import tflowtools as TFT
 
 YEAST_CONFIG = {
 	'name': "yeast",
-	'epochs': 1000,
+	'steps': 53000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 1000,
@@ -24,7 +24,7 @@ YEAST_CONFIG = {
 
 WINE_CONFIG = {
 	'name': "wine",
-	'epochs': 1000,
+	'steps': 41000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 1000,
@@ -43,7 +43,7 @@ WINE_CONFIG = {
 
 GLASS_CONFIG = {
 	'name': "glass",
-	'epochs': 1000,
+	'steps': 107000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 1000,
@@ -62,7 +62,7 @@ GLASS_CONFIG = {
 
 MNIST_CONFIG = {
 	'name': "mnist",
-	'epochs': 1000,
+	'steps': 50000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 1000,
@@ -81,7 +81,7 @@ MNIST_CONFIG = {
 
 IRIS_CONFIG = {
 	'name': "iris",
-	'epochs': 1000,
+	'steps': 50000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 1000,
@@ -100,7 +100,7 @@ IRIS_CONFIG = {
 
 PARITY_CONFIG = {
 	'name': "parity",
-	'epochs': 1000,
+	'steps': 1024000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,
@@ -119,7 +119,7 @@ PARITY_CONFIG = {
 
 SEGCOUNTER_CONFIG = {
 	'name': "segcounter",
-	'epochs': 1000,
+	'steps': 100000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,
@@ -138,7 +138,7 @@ SEGCOUNTER_CONFIG = {
 
 BITCOUNTER_CONFIG = {
 	'name': "bitcounter",
-	'epochs': 1000,
+	'steps': 100000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,
@@ -157,7 +157,7 @@ BITCOUNTER_CONFIG = {
 
 AUTOENCODER_CONFIG = {
 	'name': "autoencoder",
-	'epochs': 3000,
+	'steps': 300000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,

@@ -129,7 +129,6 @@ class Gann():
             if (test_interval and i % test_interval == 0):
                 self.do_testing(sess,scatter=False,mbs=len(self.training_cases),testset="training")
                 self.do_testing(sess,scatter=False,mbs=len(self.validation_cases),testset="validation")
-        PLT.figure()
         self.do_testing(sess,scatter=False,mbs=mbs,testset="testing")
 
 
