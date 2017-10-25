@@ -197,26 +197,26 @@ BITCOUNTER_CONFIG = {
 
 AUTOENCODER_CONFIG = {
 	'name': "autoencoder",
-	'steps': 300000,
+	'steps': 30000,
 	'lrate': "scale",
 	'tint': 100,
 	'showint': 100,
 	'mbs': 100,
 	'wgt_range': (-.3,.3),
-	'hidden_layers':[50,50],
+	'hidden_layers':[4],
 	'hidac': (lambda x, y: tf.tanh(x,name=y)),
 	'outac': (lambda x, y: tf.nn.softmax(x,name=y)),
-	'case_generator': (lambda: TFT.gen_all_one_hot_cases(8)),
+	'case_generator': (lambda: TFT.gen_all_one_hot_cases(3)),
 	'stdeviation': True,
-	'vfrac': 0.1 ,
-	'tfrac': 0.1,
+	'vfrac': 0.0 ,
+	'tfrac': 0.0,
 	'cfunc': 'rmse',
-	'mapbs': 0,
+	'mapbs': 3,
 	'cfrac':1.0,
-	'map_layers': [],
-	'display_wgts': [],
-	'display_biases': [],
-	'dendrogram_layers': []
+	'map_layers': [0,1,2],
+	'display_wgts': [1],
+	'display_biases': [1],
+	'dendrogram_layers': [1]
 }
 
 

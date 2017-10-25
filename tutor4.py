@@ -52,6 +52,11 @@ class Gann():
         self.modules.append(module)
 
     def add_mapvar(self,module_index,type='wgt'):
+        if(module_index == -1 and type=='out'):
+            self.mapvars.append(self.input)
+            self.mapvar_figures.append(PLT.figure())
+            return
+
         self.mapvars.append(self.modules[module_index].getvar(type))
         self.mapvar_figures.append(PLT.figure())
 
@@ -125,8 +130,11 @@ class Gann():
             errors.append([i,error])
             if (test_interval and i % test_interval == 0):
                 self.do_testing(sess,scatter=False,mbs=len(self.training_cases),testset="training")
-                self.do_testing(sess,scatter=False,mbs=len(self.validation_cases),testset="validation")
-        self.do_testing(sess,scatter=False,mbs=mbs,testset="testing")
+                if(len(self.validation_cases) != 0):
+                    self.do_testing(sess,scatter=False,mbs=len(self.validation_cases),testset="validation")
+
+        if(len(self.testing_cases) != 0):
+            self.do_testing(sess,scatter=False,mbs=mbs,testset="testing")
 
 
         #TFT.simple_plot(errors,xtitle="Epoch",ytitle="Error",title="")
@@ -155,6 +163,8 @@ class Gann():
         inputs = [c[0] for c in cases]
         predictions = []
         ncases = len(cases)
+        mbs = len(cases)
+
         for cstart in range(0,ncases,mbs):
             cend = min(ncases,cstart+mbs)
             minibatch = cases[cstart:cend]
@@ -196,13 +206,17 @@ class Gann():
 
 
     def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 10):
-        
+
+
         sess = session if session else self.current_session
         grabvars = [self.input, self.predictor]
 
         grabvars += self.mapvars
 
-        randNum = random.randint(0,len(self.training_cases)-mapbs-1)
+
+        print(self.training_cases)
+
+        randNum = random.randint(0,len(self.training_cases)-mapbs)
         cases = self.training_cases[randNum:randNum+mapbs]
 
         inputs = [c[0] for c in cases]
@@ -225,6 +239,7 @@ class Gann():
 
             TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
             fig_index += 1
+
 
         input_strings = [TFT.bits_to_str(i) for i in inputs]
         target_strings = [TFT.bits_to_str(i) for i in targets]
@@ -392,9 +407,7 @@ def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
 
     for out_layer in map_layers:
-        if(out_layer == 0):
-            continue
-        ann.add_mapvar(layer-1, "out")
+        ann.add_mapvar(out_layer-1, "out")
 
 
     for wgts_layer in display_wgts:
@@ -436,4 +449,4 @@ def configAndRun(name):
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
 #                 stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse")
 
-configAndRun("yeast")
+configAndRun("autoencoder")
