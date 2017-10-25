@@ -41,9 +41,15 @@ class Gann():
         self.correct_percent = 0
         self.modules = []
         self.build_neural_network(mbs)
+        self.mapvars = []
+        self.mapvar_figures = []
 
     def add_module(self, module):
         self.modules.append(module)
+
+    def add_mapvar(self,module_index,type='wgt'):
+        self.mapvars.append(self.modules[module_index].getvar(type))
+        self.mapvar_figures.append(PLT.figure())
 
     def build_neural_network(self,mbs):
         tf.reset_default_graph()
@@ -64,19 +70,6 @@ class Gann():
             invar = gmod.output; insize = gmod.outsize
         self.output = gmod.output
 
-
-
-        #a = input()
-
-        # self.w1 = tf.Variable(np.random.uniform(low,high,size=(ios,nh)),name='Weights-1')  # first weight array
-        # self.w2 = tf.Variable(np.random.uniform(low,high,size=(nh,nh2)),name='Weights-2') # second weight array
-        # self.w3 = tf.Variable(np.random.uniform(low,high,size=(nh2,out_size)),name='Weights-3')
-        # self.b1 = tf.Variable(np.random.uniform(low,high,size=nh),name='Bias-1')  # First bias vector
-        # self.b2 = tf.Variable(np.random.uniform(low,high,size=nh2),name='Bias-2')  # Second bias vector
-        # self.b3 = tf.Variable(np.random.uniform(low,high,size=out_size),name='Bias-3')
-        # self.hidden = tf.tanh(tf.matmul(self.input,self.w1) + self.b1,name="Hiddens")
-        # self.hidden2 = tf.tanh(tf.matmul(self.hidden,self.w2) + self.b2,name="Hiddens")
-        # self.output = tf.nn.softmax(tf.matmul(self.hidden2,self.w3) + self.b3, name = "Outputs")
 
         self.error = None
         if(self.cfunc == "rmse"):
@@ -198,15 +191,15 @@ class Gann():
         print(cases[-1][1])
 
 
-    def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 20):
+    def do_mapping(self,session=None,scatter=True, mbs=100, testset="mapping", mapbs = 10):
         
-        error = 0
         sess = session if session else self.current_session
-        hidden_activations = []
         grabvars = [self.input, self.predictor]
 
-        randNum = random.randint(0,len(self.training_cases)-21)
-        cases = self.training_cases[randNum:randNum+20]
+        grabvars += self.mapvars
+
+        randNum = random.randint(0,len(self.training_cases)-mapbs-1)
+        cases = self.training_cases[randNum:randNum+mapbs]
 
         inputs = [c[0] for c in cases]
         targets = [c[1] for c in cases]
@@ -219,21 +212,20 @@ class Gann():
             predictions.append(val)
 
 
-        hidden_activations.append(grabvals[0][0])
+        fig_index = 0
+        names = [x.name for x in grabvars[2:]]
+        for grabval in grabvals[2:]:
+            TFT.hinton_plot(grabval,fig=self.mapvar_figures[fig_index],title= names[fig_index])
+            fig_index += 1
+            print(grabvals)
+            print(len(self.mapvar_figures))
+            print(self.mapvars)
+            a = input()
+
+        a = input()
 
 
-        
-        correct = 0
-        for i, pred in enumerate(predictions):
 
-            if(np.argmax(pred) == np.argmax(cases[i][1])):
-                correct += 1
-
-        print(testset.capitalize() + " score: "+str(round(100*correct/len(predictions),2))+"%")
-        self.correct_percent = correct/len(predictions)
-
-        print(predictions)
-        #print(cases[-1][1])
 
 
 
@@ -383,19 +375,23 @@ def calc_avg_vect_dist(vectors):
 
 #  A test of the autoencoder
 
-def mainfunc(   epochs=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
+def mainfunc(   steps=1000000,lrate="scale",tint=100,showint=10000,mbs=100, wgt_range=(-.3,.3), hidden_layers=[50,50],
                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "mnist.txt",
-                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0):
+                stdeviation=False, vfrac=0.1, tfrac=0.1, cfunc="rmse", mapbs = 0, map_layers = []):
 
     cman = Caseman(cfunc=case_generator, vfrac=vfrac, tfrac=tfrac, stdeviation=stdeviation)
     ann = Gann(lr=lrate,cman=cman, mbs=mbs, wgt_range=wgt_range, hidden_layers=hidden_layers, hidac=hidac, outac=outac, cfunc=cfunc)
     PLT.ion()
+    epochs = steps/mbs
     ann.do_training(epochs,test_interval=tint,show_interval=showint,mbs=mbs)
 
+    for layer in map_layers:
+        if(layer == 0):
+            continue
+        ann.add_mapvar(layer-1, "out")
+    ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
     if(mapbs > 0):
         ann.do_mapping(mbs = mbs, mapbs = mapbs)
-    ##OBS: Skal vel ikke vise dendrogram mellom input og output i hele nettverket, men for et ønsket layer
-
 
     PLT.ioff()
     TFT.close_session(ann.current_session, False)
@@ -406,10 +402,10 @@ def configAndRun(name):
     key = name.upper() + '_CONFIG'
     myDict = getattr(annconfig, key)
 
-    mainfunc(epochs = myDict['epochs'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
+    mainfunc(steps = myDict['steps'], lrate=myDict['lrate'], tint=myDict['tint'], showint=myDict['showint'], mbs=myDict['mbs'],
                 wgt_range=myDict['wgt_range'], hidden_layers=myDict['hidden_layers'], hidac=myDict['hidac'], outac=myDict['outac'],
                 case_generator=myDict['case_generator'], stdeviation=myDict['stdeviation'], vfrac=myDict['vfrac'], tfrac=myDict['tfrac'],
-                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'])
+                cfunc=myDict['cfunc'], mapbs = myDict['mapbs'], map_layers=[1,2,3])
 
 # mainfunc(epochs=1000,lrate="scale",tint=100,showint=10000,mbs=51, wgt_range=(-.1,.1), hidden_layers=[50,50],
 #                 hidac=(lambda x, y: tf.tanh(x,name=y)), outac=(lambda x, y: tf.nn.softmax(x,name=y)), case_generator = "yeast.txt",
